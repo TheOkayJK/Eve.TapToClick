@@ -177,7 +177,7 @@ namespace Eve.TapToClick.Forms
                     lastTouchX = e.X;
                     lastTouchY = e.Y;
                     // Update the mouse position.
-                    SendMouseUpdate(pixelsToMoveX, pixelsToMoveY);
+                    //SendMouseUpdate(pixelsToMoveX, pixelsToMoveY);
                 }
             }
         }

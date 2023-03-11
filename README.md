@@ -1,5 +1,6 @@
 # Eve.TapToClick
-This is a simple program that enables tap-to-click on the touchpad when running Windows 10 on a Google Pixelbook.
+This is a simple program that enables tap-to-click on the touchpad when running Windows 11 on a Google Pixelbook.
+I have modified the fork of the original so tht the touchpad is disabled when in tablet mode and I tweaked a couple of other things as well. Enjoy!
 
 ## Screenshots
 

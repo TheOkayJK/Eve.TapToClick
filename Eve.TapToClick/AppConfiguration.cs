@@ -25,8 +25,8 @@ namespace Eve.TapToClick
             MaxTapMilliseconds = 175;
             MaxTapDeltaPosition = 500;
             MaxDoubleTapAndDragMilliseconds = 250;
-            MissedMovementMilliseconds = 250;
-            MissedMovementScale = 0.2;
+            MissedMovementMilliseconds = 0;
+            MissedMovementScale = 0;
         }
 
         public void Save()

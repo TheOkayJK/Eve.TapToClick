@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using WindowsInput.Native;
 
 namespace Eve.TapToClick.Utilities
 {
@@ -60,76 +62,97 @@ namespace Eve.TapToClick.Utilities
                 HandleHidReport(hidReport, preparsedData);
             }
         }
-
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto, EntryPoint = "GetSystemMetrics")]
+        private static extern int GetSystemMetrics(int nIndex);
+        private bool toggled = false;
         private void HandleHidReport(byte[] hidReport, byte[] preparsedData)
         {
-            // Check each of the possible contacts
-            for (int i = 0; i < Constants.MaxContacts; i++)
+            var sim = new WindowsInput.InputSimulator();
+            int SM_CONVERTIBLESLATEMODE = 0x2003;
+            int state = GetSystemMetrics(SM_CONVERTIBLESLATEMODE);//O for tablet
+            if (state == 0)
             {
-                // Are there any active usages on the contact's link collection?
-                ushort[] contactUsages =
-                    Hid.HidP_GetUsages(HidPReportType.HidP_Input, Constants.PressureUsage.UsagePage, (ushort)(i + 1), preparsedData, hidReport);
-
-                // If not, it isn't active.
-                bool contactActive = contactUsages.Any();
-
-                // Next, if we think it might be active, we check the pressure value.
-                uint pressure = 0;
-
-                if (contactActive)
+                if (!toggled)
                 {
-                    pressure =
-                        Hid.HidP_GetUsageValue(HidPReportType.HidP_Input, Constants.PressureUsage, (ushort)(i + 1), preparsedData, hidReport);
-
-                    // If it is below the minimum threshold, we change our minds.
-                    if (pressure < MinimumDetectionPressure)
-                        contactActive = false;
+                    sim.Keyboard.ModifiedKeyStroke(new[] { VirtualKeyCode.CONTROL, VirtualKeyCode.LWIN}, new[] {VirtualKeyCode.F24});
+                    toggled = true;
                 }
-
-                // If the contact isn't active, we don't need to check the x/y values.
-                if (!contactActive)
+            }
+            else
+            {
+                if (toggled)
                 {
-                    // If it was previously active, we fire the OnContactEnd event.
-                    if (activeContacts[i])
-                    {
-                        OnContactEnd(new TouchpadEventArgs
-                        {
-                            ContactIndex = i
-                        });
+                    sim.Keyboard.ModifiedKeyStroke(new[] { VirtualKeyCode.CONTROL, VirtualKeyCode.LWIN }, new[] { VirtualKeyCode.F24 });
+                    toggled = false;
+                }
+                // Check each of the possible contacts
+                for (int i = 0; i < Constants.MaxContacts; i++)
+                {
+                    // Are there any active usages on the contact's link collection?
+                    ushort[] contactUsages =
+                        Hid.HidP_GetUsages(HidPReportType.HidP_Input, Constants.PressureUsage.UsagePage, (ushort)(i + 1), preparsedData, hidReport);
 
-                        // ..and set it back to inactive
-                        activeContacts[i] = false;
+                    // If not, it isn't active.
+                    bool contactActive = contactUsages.Any();
+
+                    // Next, if we think it might be active, we check the pressure value.
+                    uint pressure = 0;
+
+                    if (contactActive)
+                    {
+                        pressure =
+                            Hid.HidP_GetUsageValue(HidPReportType.HidP_Input, Constants.PressureUsage, (ushort)(i + 1), preparsedData, hidReport);
+
+                        // If it is below the minimum threshold, we change our minds.
+                        if (pressure < MinimumDetectionPressure)
+                            contactActive = false;
                     }
 
-                    // Continue on to the next possible contact
-                    continue;
-                }
+                    // If the contact isn't active, we don't need to check the x/y values.
+                    if (!contactActive)
+                    {
+                        // If it was previously active, we fire the OnContactEnd event.
+                        if (activeContacts[i])
+                        {
+                            OnContactEnd(new TouchpadEventArgs
+                            {
+                                ContactIndex = i
+                            });
 
-                // Okay, we've got a *for real* active contact. Let's check the x/y values.
-                uint x = Hid.HidP_GetUsageValue(HidPReportType.HidP_Input, Constants.PositionXUsage, (ushort)(i + 1), preparsedData, hidReport);
-                uint y = Hid.HidP_GetUsageValue(HidPReportType.HidP_Input, Constants.PositionYUsage, (ushort)(i + 1), preparsedData, hidReport);
+                            // ..and set it back to inactive
+                            activeContacts[i] = false;
+                        }
 
-                // We're going to either be calling OnContactStart or OnContactUpdate,
-                // but with the same EventArgs either way. So let's go ahead and create it.
-                TouchpadEventArgs e = new TouchpadEventArgs
-                {
-                    ContactIndex = i,
-                    Pressure = pressure,
-                    X = x,
-                    Y = y
-                };
+                        // Continue on to the next possible contact
+                        continue;
+                    }
 
-                // Fire the appropriate event.
-                if (activeContacts[i])
-                {
-                    OnContactUpdate(e);
-                }
-                else
-                {
-                    OnContactStart(e);
+                    // Okay, we've got a *for real* active contact. Let's check the x/y values.
+                    uint x = Hid.HidP_GetUsageValue(HidPReportType.HidP_Input, Constants.PositionXUsage, (ushort)(i + 1), preparsedData, hidReport);
+                    uint y = Hid.HidP_GetUsageValue(HidPReportType.HidP_Input, Constants.PositionYUsage, (ushort)(i + 1), preparsedData, hidReport);
 
-                    // This contact has started, and it is now active.
-                    activeContacts[i] = true;
+                    // We're going to either be calling OnContactStart or OnContactUpdate,
+                    // but with the same EventArgs either way. So let's go ahead and create it.
+                    TouchpadEventArgs e = new TouchpadEventArgs
+                    {
+                        ContactIndex = i,
+                        Pressure = pressure,
+                        X = x,
+                        Y = y
+                    };
+
+                    // Fire the appropriate event.
+                    if (activeContacts[i])
+                    {
+                        OnContactUpdate(e);
+                    }
+                    else
+                    {
+                        OnContactStart(e);
+
+                        // This contact has started, and it is now active.
+                        activeContacts[i] = true;
+                    }
                 }
             }
         }
