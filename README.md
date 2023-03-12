@@ -1,6 +1,24 @@
-# Eve.TapToClick
-This is a simple program that enables tap-to-click on the touchpad when running Windows 11 on a Google Pixelbook.
-I have modified the fork of the original so tht the touchpad is disabled when in tablet mode and I tweaked a couple of other things as well. Enjoy!
+# Eve.TapToClick - Modified
+This is a simple program that enables tap-to-click on the touchpad when running Windows 10 or 11 on a Google Pixelbook.
+I have modified the a [fork](https://github.com/nickcoury/Eve.TapToClick) of the [original](https://github.com/megabytefisher/Eve.TapToClick) so that the touchpad is disabled when in tablet mode and I tweaked a couple of other things as well. Enjoy!
+
+# Instructions
+1. Uninstall any previous version you have.
+2. Download the latest release from here: [**Latest Release**](https://github.com/TheOkayJK/Eve.TapToClick/releases/latest)
+3. I **Strongly** suggest changing the settings indicated by the obnoxious red box to 0. They should be 0 by default but depending on the version you had installed previously it the values may differ by default so I suggest double checking.
+<img src="Screenshot-suggested-settings.png" width="600">
+4. I also reccomend checking the "Run at Startup" box.
+
+## TODO
+
+1. Auto disable touchpad while typing (Only while key is pressed or for a short time after as well??)
+2. New Icon?
+3. Better design?
+4. Incorporate other pixelbook specific annoyances like keyboard backlight or screen brightness??
+5. ????
+
+
+
 
 ## Screenshots
 
